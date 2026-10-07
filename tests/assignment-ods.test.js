@@ -1,3 +1,4 @@
+import { assignServices } from '../src/core/assignment.js';
 import { it, expect } from 'vitest';
 import * as X from '@e965/xlsx';
 import JSZip from 'jszip';
@@ -26,4 +27,15 @@ it('changes only F/G while retaining styles, merges, repeated cells and all othe
 it('rejects a renamed Excel workbook instead of importing another format',()=>{
  const w=X.utils.book_new();X.utils.book_append_sheet(w,X.utils.aoa_to_sheet([['Mo','01.07.2026','10:00','Eu','Altar']]));
  expect(()=>parseTemplate(X.write(w,{type:'array',bookType:'xlsx'}))).toThrow(/ODS/);
+});
+
+it.each([2,1,0])('writes %i eligible weekly names in header F/G and clears remaining cells, preserving the following row',async count=>{
+ const input=workbook([['So','06.09.2026','','Wochendienst','','alter Name','zweiter Name'],['','','','','Hinweis','unverändert'],[],['So','13.09.2026','10:00','Trauung','Altar','alt','alt'],[],['So','20.09.2026','10:00','Tauffeier','Altar','alt','alt']]);
+ const services=parseTemplate(input),people=[...Array.from({length:count},(_,i)=>({id:`p${i}`,name:`Vor Name ${i}`,year:2020,weekly:true,preference:'NONE'})),{id:'blocked',name:'Gesperrt',year:2020,weekly:true,preference:'NO_SERVICE'},{id:'ordinary',name:'Ohne Wochendienst',year:2020,weekly:false,preference:'NONE'}];
+ expect(services[0]).toMatchObject({row:0,roles:[]});
+ const output=await fillTemplate(input,assignServices(services,people),people);
+ const w=X.read(output),data=X.utils.sheet_to_json(w.Sheets[w.SheetNames[0]],{header:1,defval:''});
+ expect(data[0].slice(5,7)).toEqual([count>0?'Vor Name 0':'',count>1?'Vor Name 1':'']);
+ expect(data[1][5]).toBe('unverändert');
+ for(const row of [3,5]) expect(data[row].slice(5,7)).toEqual(['Wochendienst','']);
 });

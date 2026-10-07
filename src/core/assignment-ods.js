@@ -28,7 +28,7 @@ export function parseTemplate(bytes) {
    const date=match?`${match[3]}-${match[2]}-${match[1]}`:'';
    if(!date||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date) throw new Error(`Zeile ${row+1}: Ungültiges Datum.`);
    if(!r[3]) throw new Error(`Zeile ${row+1}: Gottesdiensttyp fehlt.`);
-   current={date,time:String(r[2]),type:String(r[3]).trim(),roles:[]};services.push(current);
+   current={row,date,time:String(r[2]),type:String(r[3]).trim(),roles:[]};services.push(current);
   } else if(!r.slice(0,5).some(Boolean)) current=null;
   if(r[4]&&current&&current.type!=='Wochendienst') current.roles.push({name:String(r[4]).trim(),row});
  });

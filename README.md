@@ -15,11 +15,11 @@ IDs müssen eindeutig sein. Wochendienst und Rauchfass sind 0/1. Wünsche: `NONE
 ## Regeln
 
 - Zwei verschiedene Personen pro Rolle; kleines Kreuz und Lautsprecher benötigen eine. Niemand dient zweimal im selben Gottesdienst.
-- Nur NO_SERVICE schließt eine Person pauschal aus. Wochendienst=1 bedeutet, dass eine Person grundsätzlich Wochendienst hat; sie bleibt für gewöhnliche Sonntagsgottesdienste einteilbar. Die beiden Eingabedateien enthalten keinen datierten Wochendienstplan; Überschneidungen mit konkreten Wochendiensten können daher nicht berücksichtigt werden.
+- NO_SERVICE schließt eine Person vollständig aus. Jede Wochendienst-Zeile liegt auf einem Sonntag D und teilt zwei verschiedene Personen mit Wochendienst=1 für die folgende Woche Montag–Sonntag ein. Ihre Namen werden in F und G der Wochendienst-Kopfzeile geschrieben. Beide zugeteilten Personen sind am Sonntag D+7 von gewöhnlichen Gottesdiensten ausgeschlossen, dürfen aber am Sonntag D dienen. Wochendienst=1 allein schließt niemanden von Sonntagsdiensten aus. Bei nur einer zulässigen Person wird F gefüllt und G bleibt leer; ohne zulässige Personen bleiben F und G leer. Der Bericht nennt mit Datum und Kopfzeile die genaue Anzahl: „Wochendienst: 1 unbelegter Personenplatz; Wochendienst=1 und kein NO_SERVICE erforderlich.“ beziehungsweise „Wochendienst: 2 unbelegte Personenplätze; Wochendienst=1 und kein NO_SERVICE erforderlich.“
 - SchGD lässt nur aktuelle Jahrgänge zu: 1. August des Beitrittsjahres bis 31. August des Folgejahres. Im August überlappen zwei Jahrgänge. Ohne zulässige Personen bleibt die Rolle leer und erscheint im Konfliktbericht.
 - Rauchfass benötigt zwei Personen: mindestens eine geschulte Person und eine **andere** Person mit mindestens drei vollen Mitgliedsjahren.
 - Fahnen, gr. Fahnen, Laternen, gr. Kreuz und Palmstecken benötigen fünf volle Jahre; kl. Kreuz / kleines Kreuz vier. Mitgliedsjahre beginnen am 1. August. Die sichtbaren erweiterten Einstellungen erlauben eigene Rollen und Mindestjahre.
-- Tauffeier/Trauung erhalten „Wochendienst“ in F und ein leeres G. Reine Wochendienst-Zeilen bleiben unverändert.
+- Tauffeier/Trauung erhalten „Wochendienst“ in F und ein leeres G.
 
 Die deterministische gruppenweise Optimierung maximiert zuerst belegte Plätze, dann gewichtet sie jüngere Jahrgänge häufiger. Weitere Ziele sind zeitliche Abstände, gemeinsame Haushalte und Wünsche (gegenseitiges PAIR stärker als PREF). Eine begrenzte Suche bewertet vollständige Rollengruppen; falls sie nicht alle Plätze füllt, prüft eine exakte Suche die mögliche maximale Belegung. Harte Regeln werden niemals zugunsten dieser Wünsche gebrochen.
 
@@ -48,7 +48,7 @@ Die echte Browserprüfung liest die beiden externen Referenzdateien aus `/opt/da
 - `St. Georg - Miniplan vom 01.07.2026 - 03.10.2026.ods`
 - `Test_Person_data.ods`
 
-Die Dateien werden nicht ins Repository kopiert. Playwright öffnet die gebaute App, lädt die ODS-Ausgabe herunter und prüft Rollen, Ausschlüsse, Jahrgangsgrenzen, Doppelbelegung, Wochendienst-Markierungen, unveränderte übrige Zellen und ZIP-Einträge sowie Layout/Stilattribute. `AGENT_BROWSER_EXECUTABLE_PATH` kann ein installiertes Chromium auswählen.
+Die Dateien werden nicht ins Repository kopiert. Playwright öffnet die gebaute App, lädt die ODS-Ausgabe herunter und prüft Rollen, Ausschlüsse, Jahrgangsgrenzen, Doppelbelegung, beide Namen in F/G der Wochendienst-Kopfzeilen und Ausschlüsse am folgenden Sonntag, Trauung-/Tauffeier-Markierungen, unveränderte übrige Zellen und ZIP-Einträge sowie Layout/Stilattribute. `AGENT_BROWSER_EXECUTABLE_PATH` kann ein installiertes Chromium auswählen.
 
 Kernlogik liegt unter `src/core/`; Tests unter `tests/`. Die Laufzeit benötigt nur `@e965/xlsx` und `jszip`.
 

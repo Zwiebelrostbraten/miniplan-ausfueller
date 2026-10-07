@@ -8,21 +8,24 @@ const compare = (a,b) => { for(let i=0;i<a.length;i++) if(a[i]!==b[i]) return b[
 export function assignServices(services, people, minimumYears = defaultMinimumYears) {
  const persons=[...people].sort((a,b)=>a.id.localeCompare(b.id));
  const stats=new Map(persons.map(p=>[p.id,{...p,count:0,last:null,lastGap:null}]));
- const assignments=[], conflicts=[]; let filled=0,unfilled=0;
+ const assignments=[], conflicts=[], weeklyExclusions=new Map(); let filled=0,unfilled=0;
  const youngest=Math.max(...persons.map(p=>p.year),0);
  for(const s of [...services].sort((a,b)=>a.date.localeCompare(b.date)||String(a.time??'').localeCompare(String(b.time??'')))) {
-  if(s.type==='Wochendienst') continue;
+  const weekly=s.type==='Wochendienst';
   if(['Tauffeier','Trauung'].includes(s.type)) { for(const r of s.roles) assignments.push({date:s.date,row:r.row,role:r.name,people:[],marker:'Wochendienst'}); continue; }
-  const eligible=persons.filter(p=>p.preference!=='NO_SERVICE' && (s.type!=='SchGD'||currentCohort(p.year,s.date)));
-  const groups=s.roles.map((r,index)=>{
-   const size=roleSize(r.name), incense=/^\(?Rf\.\)?$/i.test(r.name);
-   const candidates=eligible.filter(p=>membershipYears(p.year,s.date)>=(minimumYears[r.name]??0));
+  const eligible=persons.filter(p=>p.preference!=='NO_SERVICE' && (weekly?p.weekly:!weeklyExclusions.get(day(s.date))?.has(p.id)) && (s.type!=='SchGD'||currentCohort(p.year,s.date)));
+  const roles=weekly?[{name:'Wochendienst',row:s.row}]:s.roles;
+  const groups=roles.map((r,index)=>{
+   const size=weekly?2:roleSize(r.name), incense=/^\(?Rf\.\)?$/i.test(r.name);
+   const candidates=weekly?eligible:eligible.filter(p=>membershipYears(p.year,s.date)>=(minimumYears[r.name]??0));
    const options=[];
    for(let i=0;i<candidates.length;i++) for(let j=size===1?i:i+1;j<candidates.length;j++) {
     const pair=size===1?[candidates[i]]:[candidates[i],candidates[j]];
     if(incense && !pair.some((p,index)=>p.incense&&pair.some((other,otherIndex)=>otherIndex!==index&&membershipYears(other.year,s.date)>=3))) continue;
     options.push(pair); if(size===1) break;
    }
+   // A weekly duty may fill one of its two places when only one person qualifies.
+   if(weekly && candidates.length===1) options.push([candidates[0]]);
    return {r,index,size,options,incense};
   }).sort((a,b)=>a.options.length-b.options.length||a.index-b.index);
   function score(chosen) {
@@ -58,8 +61,16 @@ export function assignServices(services, people, minimumYears = defaultMinimumYe
   groups.forEach((g,i)=>{
    const pair=best.chosen[i];assignments.push({date:s.date,row:g.r.row,role:g.r.name,people:pair.map(p=>p.id)});
    filled+=pair.length;unfilled+=g.size-pair.length;
-   if(pair.length<g.size) conflicts.push({date:s.date,role:g.r.name,row:g.r.row,reason:s.type==='SchGD'&&!eligible.length?'Kein aktueller Jahrgang für diesen SchGD.':!g.options.length?`Keine zulässigen Kandidaten: ${g.incense?'Rauchfass-Schulung und mindestens drei volle Mitgliedsjahre':`Mindestdauer ${minimumYears[g.r.name]??0} Jahre, Ausschlüsse und Jahrgang`} prüfen.`:'Zu wenige verschiedene zulässige Personen im Gottesdienst; Doppelbelegung ausgeschlossen.'});
-   for(const p of pair) {const st=stats.get(p.id);st.count++;st.lastGap=st.last===null?null:day(s.date)-st.last;st.last=day(s.date);}
+   if(pair.length<g.size) conflicts.push({date:s.date,role:g.r.name,row:g.r.row,reason:weekly?`Wochendienst: ${g.size-pair.length} ${g.size-pair.length===1?'unbelegter Personenplatz':'unbelegte Personenplätze'}; Wochendienst=1 und kein NO_SERVICE erforderlich.`:s.type==='SchGD'&&!eligible.length?'Kein aktueller Jahrgang für diesen SchGD.':!g.options.length?`Keine zulässigen Kandidaten: ${g.incense?'Rauchfass-Schulung und mindestens drei volle Mitgliedsjahre':`Mindestdauer ${minimumYears[g.r.name]??0} Jahre, Ausschlüsse und Jahrgang`} prüfen.`:'Zu wenige verschiedene zulässige Personen im Gottesdienst; Doppelbelegung ausgeschlossen.'});
+   for(const p of pair) {
+    if(weekly) {
+     // The header Sunday precedes the assigned Monday–Sunday week.
+     const nextSunday=day(s.date)+7;
+     if(!weeklyExclusions.has(nextSunday)) weeklyExclusions.set(nextSunday,new Set());
+     weeklyExclusions.get(nextSunday).add(p.id);
+    }
+    const st=stats.get(p.id);st.count++;st.lastGap=st.last===null?null:day(s.date)-st.last;st.last=day(s.date);
+   }
   });
  }
  return {assignments,conflicts,filled,unfilled,distribution:[...stats.values()].map(({id,name,year,count,lastGap})=>({id,name,year,count,lastGap}))};

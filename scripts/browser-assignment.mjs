@@ -29,18 +29,31 @@ try{
  assert.equal(compressionFor(bytes,'mimetype'),0);
  const workbook=X.read(bytes);const rows=X.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]],{header:1,defval:''});
  const originalWorkbook=X.read(original);const originalRows=X.utils.sheet_to_json(originalWorkbook.Sheets[originalWorkbook.SheetNames[0]],{header:1,defval:''});
+ const weeklyExclusions=new Map();let weeklyFilled=0;
+ for(const s of services.filter(s=>s.type==='Wochendienst')){
+  assert.equal(new Date(`${s.date}T00:00:00Z`).getUTCDay(),0);
+  const names=rows[s.row].slice(5,7).filter(Boolean);
+  const expected=Math.min(2,people.filter(p=>p.weekly&&p.preference!=='NO_SERVICE').length);
+  assert.equal(names.length,expected);assert.equal(new Set(names).size,names.length);
+  if(names.length<2)assert.match(report,new RegExp(`Zeile ${s.row+1}: Wochendienst: ${2-names.length} unbelegt`));
+  const nextSunday=new Date(Date.parse(`${s.date}T00:00:00Z`)+7*86400000).toISOString().slice(0,10);
+  if(!weeklyExclusions.has(nextSunday))weeklyExclusions.set(nextSunday,new Set());
+  for(const name of names){const p=people.find(p=>p.name===name);assert.ok(p?.weekly);assert.notEqual(p.preference,'NO_SERVICE');weeklyFilled++;weeklyExclusions.get(nextSunday).add(p.id);}
+
+ }
+ assert.ok(weeklyFilled>0);
  let filled=0;
  for(const s of services){const used=new Set();for(const r of s.roles){const names=rows[r.row].slice(5,7).filter(Boolean);
   if(['Trauung','Tauffeier'].includes(s.type)){assert.deepEqual(names,['Wochendienst']);continue;}
   if(!names.length){assert.match(report,new RegExp(`Zeile ${r.row+1}:`));continue;}
-  assert.equal(names.length,roleSize(r.name));const selected=names.map(name=>{const p=people.find(p=>p.name===name);assert.ok(p);assert.notEqual(p.preference,'NO_SERVICE');assert.ok(!used.has(p.id));used.add(p.id);assert.ok(membershipYears(p.year,s.date)>=(defaultMinimumYears[r.name]??0));if(s.type==='SchGD')assert.ok(currentCohort(p.year,s.date));return p;});
+  assert.equal(names.length,roleSize(r.name));const selected=names.map(name=>{const p=people.find(p=>p.name===name);assert.ok(p);assert.notEqual(p.preference,'NO_SERVICE');assert.ok(!weeklyExclusions.get(s.date)?.has(p.id));assert.ok(!used.has(p.id));used.add(p.id);assert.ok(membershipYears(p.year,s.date)>=(defaultMinimumYears[r.name]??0));if(s.type==='SchGD')assert.ok(currentCohort(p.year,s.date));return p;});
   if(/^\(?Rf\.\)?$/.test(r.name)){assert.ok(selected.some(p=>p.incense));assert.ok(selected.some(p=>membershipYears(p.year,s.date)>=3));}
   filled+=names.length;
  }}
  // July SchGD has cohort 2025; August overlaps 2025/2026 by the explicit boundary rule.
  // September and October admit only 2026. Never override the date rule with a fixed year.
  assert.ok(filled>0);
- const modified=new Set(services.flatMap(s=>s.roles.map(r=>r.row)));
+ const modified=new Set(services.flatMap(s=>s.type==='Wochendienst'?[s.row]:s.roles.map(r=>r.row)));
  for(let i=0;i<originalRows.length;i++){assert.deepEqual(rows[i].slice(0,5),originalRows[i].slice(0,5));if(!modified.has(i))assert.deepEqual(rows[i],originalRows[i]);}
  const before=await JSZip.loadAsync(original),after=await JSZip.loadAsync(bytes);
  assert.deepEqual(Object.keys(before.files).sort(),Object.keys(after.files).sort());
@@ -51,5 +64,5 @@ try{
  await page.locator('#create-plan').click();await page.waitForFunction(()=>!document.getElementById('download').disabled);
  await page.locator('#people-input').setInputFiles([]);assert.equal(await page.locator('#download').isDisabled(),true);assert.equal(await page.locator('#create-plan').isDisabled(),true);
  await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
- assert.deepEqual(errors,[]);console.log(`Browserprüfung erfolgreich: ${filled} Plätze; heruntergeladene ODS geprüft: ${path}`);
+ assert.deepEqual(errors,[]);console.log(`Browserprüfung erfolgreich: ${filled} gewöhnliche Plätze, ${weeklyFilled} Wochendienste; heruntergeladene ODS geprüft: ${path}`);
 }finally{await browser.close();}
