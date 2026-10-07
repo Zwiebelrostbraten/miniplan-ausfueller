@@ -1,132 +1,55 @@
-# Miniplan
+# Miniplan-Ausfüller
 
-[![Deploy GitHub Pages](https://github.com/Zwiebelrostbraten/miniplan/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/Zwiebelrostbraten/miniplan/actions/workflows/deploy-pages.yml)
+Datensparsame Browser-App zum automatischen Einteilen von Ministranten. Zwei ODS-Dateien auswählen, „Plan einteilen“ drücken, Bericht prüfen und die ausgefüllte ODS-Vorlage herunterladen. Dateien und Namen werden ausschließlich lokal verarbeitet; kein Backend, kein Upload.
 
-Eine datensparsame, browserbasierte Web-App für den St.-Georg-Miniplan. Sie liest Gottesdienstpläne aus PDF-, Excel-, OpenDocument- oder CSV-Dateien ein, bietet eine Korrekturtabelle und erzeugt daraus einen Miniplan als formatiertes Excel-Dokument oder in offenen Tabellenformaten.
+## Eingaben
 
-**Live-Version:** https://tools.minis-mutlangen.de
+Das erste Tabellenblatt der **leeren Miniplan-Vorlage** enthält A: Wochentag, B: Datum (`DD.MM.YYYY`), C: Uhrzeit, D: Gottesdiensttyp, E: Rolle, F/G: Namen. Folgezeilen mit Rollen gehören zum vorigen Gottesdienst bis zur Leerzeile. Die Ausgabe verändert ausschließlich die Namenszellen F/G; Layout, Stile, Zusammenführungen und weitere Tabellenblätter bleiben erhalten.
 
-## Datenschutz und Betrieb
+Die **Personendaten** benötigen diese Spalten in dieser Reihenfolge:
 
-- Keine Anmeldung, kein Server, keine Datenbank.
-- PDFs und Excel-Dateien werden ausschließlich im Browser verarbeitet.
-- Nach der ersten Seite-Ladung läuft die Anwendung auch ohne Internetverbindung weiter.
-- Die veröffentlichte Website wird automatisch aus dem `main`-Branch über GitHub Pages bereitgestellt.
+`Person-ID`, `Haushalts-ID`, `Nachname`, `Vorname`, `Beitrittsjahr`, `Wochendienst`, `PREF_CODE`, `Rauchfass`.
 
-> **Hinweis:** Gottesdienstpläne vor dem Export immer in der Prüftabelle kontrollieren. Die PDF-Erkennung ist auf das aktuelle fünfspaltige Layout des Pfarrbüros ausgelegt. Eingescannte PDFs benötigen zunächst eine OCR-Textschicht.
+IDs müssen eindeutig sein. Wochendienst und Rauchfass sind 0/1. Wünsche: `NONE`, `NO_SERVICE`, `PAIR:<Person-ID>` oder `PREF:<Person-ID>`.
 
-## Funktionen
+## Regeln
 
-- Import von `.pdf`, `.xlsx`, `.ods` und `.csv`
-- Sofort sichtbare, editierbare Prüftabelle für eingelesene Gottesdienste
-- Manuelles Ergänzen und Entfernen von Einträgen
-- Berücksichtigung von Ferien, Faschingsferien und Feiertagen in Baden-Württemberg
-- Konfigurierbare Gottesdienste sowie Wochendienst am Sonntag
-- Formatiertes `.xlsx` für den bisherigen Excel-Workflow
-- Offener Export als `.ods` (OpenDocument Spreadsheet) oder UTF-8-`.csv` mit Semikolontrennung
-- Lokale Beispieldaten zum gefahrlosen Testen
+- Zwei verschiedene Personen pro Rolle; kleines Kreuz und Lautsprecher benötigen eine. Niemand dient zweimal im selben Gottesdienst.
+- NO_SERVICE schließt vollständig aus. Wochendienst=1 schließt bei Sonntagsgottesdiensten aus.
+- SchGD lässt nur aktuelle Jahrgänge zu: 1. August des Beitrittsjahres bis 31. August des Folgejahres. Im August überlappen zwei Jahrgänge. Ohne zulässige Personen bleibt die Rolle leer und erscheint im Konfliktbericht.
+- Rauchfass benötigt zwei Personen: mindestens eine geschulte Person und eine **andere** Person mit mindestens drei vollen Mitgliedsjahren.
+- Fahnen, gr. Fahnen, Laternen, gr. Kreuz und Palmstecken benötigen fünf volle Jahre; kl. Kreuz / kleines Kreuz vier. Mitgliedsjahre beginnen am 1. August. Die sichtbaren erweiterten Einstellungen erlauben eigene Rollen und Mindestjahre.
+- Tauffeier/Trauung erhalten „Wochendienst“ in F und ein leeres G. Reine Wochendienst-Zeilen bleiben unverändert.
 
-## Verwendung
+Die deterministische gruppenweise Optimierung maximiert zuerst belegte Plätze, dann gewichtet sie jüngere Jahrgänge häufiger. Weitere Ziele sind zeitliche Abstände, gemeinsame Haushalte und Wünsche (gegenseitiges PAIR stärker als PREF). Eine begrenzte Suche bewertet vollständige Rollengruppen; falls sie nicht alle Plätze füllt, prüft eine exakte Suche die mögliche maximale Belegung. Harte Regeln werden niemals zugunsten dieser Wünsche gebrochen.
 
-### Online
+Der Bericht zeigt belegte/unbelegte Plätze, Konflikte mit Datum, Rolle und Zeile sowie Dienste und den Abstand der letzten beiden Einteilungen je Person. Eingabe- oder Einstellungsänderungen verwerfen die vorbereitete Ausgabe. Namen werden als Text geschrieben und vor Formel-Injection geschützt.
 
-Die aktuelle Version unter https://zwiebelrostbraten.github.io/miniplan/ öffnen. Datei auswählen, Daten prüfen und vor dem Download im Formatmenü wählen:
+## Lokale Nutzung und Entwicklung
 
-- **OpenDocument (`.ods`)** ist der Standardexport und das offene Tabellenformat für LibreOffice, OnlyOffice und ähnliche Programme.
-- **Excel (`.xlsx`)** bleibt wählbar und behält das bisherige Drucklayout und die Formatierung.
-- **CSV (`.csv`)** ist eine einfache UTF-8-Datei mit deutscher Semikolontrennung; sie enthält die Plan-Daten, jedoch keine Druckformatierung.
+Node.js 22 oder neuer:
 
-Alle drei Exportwege funktionieren komplett im Browser.
-
-Unter **Erweiterte Einstellungen** lassen sich eine eigene Regeldatei (`services.json`)
-und eigene ICS-Kalender auswählen. Eigene Kalender ersetzen die mitgelieferten
-Kalender. Die Option „Ferien- und Feiertagsprüfung deaktivieren“ entspricht
-Python mit einer leeren Kalenderliste. Änderungen an diesen Einstellungen oder
-ein neuer Import machen einen zuvor vorbereiteten Export ungültig.
-
-### Vollständig lokal
-
-Nach einem Build liegen die Dateien in `dist/`. Den gesamten Ordner zusammenhalten und `dist/miniplan.html` im Browser öffnen. Die vier Laufzeitdateien dürfen nicht getrennt werden:
-
-- `miniplan.html`
-- `miniplan.css`
-- `miniplan.js`
-- `miniplan.worker.js`
-
-`index.html` ist zusätzlich für GitHub Pages vorhanden.
-
-## Entwicklung
-
-Voraussetzung: Node.js 22 oder neuer.
-
-```bash
+```sh
 npm ci
-npm test
 npm run lint
+npm test
 npm run build
 ```
 
-Oder alle Prüfungen in einem Schritt:
-
-```bash
-npm run check
-```
-
-Die Repository-/CI-Suite benötigt keine externe Python-Referenz. Der semantische
-Regressionstest in `tests/pdf-real.test.js` wird ausdrücklich als übersprungen
-gemeldet, wenn `MINIPLAN_REFERENCE` nicht gesetzt ist oder die PDF-Testdatei
-`01.07.2026-04.10.2026.pdf` dort fehlt. Mit vorhandener Referenz läuft er automatisch:
+`dist/miniplan.html` im Browser öffnen; `miniplan.css` und `miniplan.js` müssen daneben liegen. `dist/index.html` ist die gleichwertige Website-Einstiegsseite. Nach dem Laden ist kein Internet erforderlich.
 
 ```sh
-MINIPLAN_REFERENCE=../miniplan-optimized npm run check
-```
-
-Der Build erstellt die veröffentlichbaren Dateien unter `dist/`. Diese werden nicht eingecheckt; der GitHub-Pages-Workflow baut sie bei jedem Push auf `main` neu.
-
-## Projektstruktur
-
-```text
-src/
-  app.js              Benutzeroberfläche und Browser-Integration
-  core/               Einlesen, Normalisierung, Regeln und Excel-Export
-  data/               Lokale Gottesdienst-, Ferien- und Feiertagsdaten
-  index.html          HTML-Vorlage
-  style.css           Oberflächengestaltung
-tests/                Unit- und Build-Tests
-.github/workflows/    Automatischer Test- und Pages-Deployment-Workflow
-```
-
-## Qualitätssicherung
-
-Der Deployment-Workflow führt vor jeder Veröffentlichung automatisch Tests, Linting und den Build aus. Ein fehlgeschlagener Check wird nicht veröffentlicht.
-
-## Lizenz
-
-[MIT](LICENSE)
-
-### Browser-Parität mit Python prüfen
-
-`scripts/browser-parity.mjs` öffnet `dist/miniplan.html` direkt über `file://`
-in Chromium (Zeitzone Europe/Berlin). Es vergleicht PDF- und XLSX-Import,
-Diagnosen, Plan und exportierte Tabellenzellen mit der Python-Referenz und prüft
-ODS sowie die erweiterten Einstellungen und fehlgeschlagene Ersatzimporte.
-Playwright ist als Entwicklungsabhängigkeit im Lockfile festgelegt. Voraussetzung
-sind das passende Chromium sowie die Python-Referenz mit ihren Abhängigkeiten
-und der PDF-Testdatei unter `../miniplan-optimized`.
-Diese Browser-Paritätsprüfung bleibt die verpflichtende lokale Prüfung mit der
-echten PDF-Datei; eine fehlende Referenz führt hier weiterhin zum Fehler, nicht
-zum Überspringen.
-
-```sh
-npm ci
 npx playwright install chromium
-# Unter Linux bei fehlenden Systembibliotheken: npx playwright install --with-deps chromium
-uv sync --project ../miniplan-optimized --frozen
 npm run test:browser
 ```
 
-Der Test verwendet automatisch die `.venv` der Python-Referenz, andernfalls
-`python3`; `PYTHON=/absolute/path/to/python` überschreibt diese Auswahl.
-`MINIPLAN_REFERENCE` überschreibt den Referenzordner. Für ein bereits installiertes
-Chromium kann `AGENT_BROWSER_EXECUTABLE_PATH` gesetzt werden. Der Test meldet den
-Pfad zu seinen temporären Testdateien und Downloads.
+Die echte Browserprüfung liest die beiden externen Referenzdateien aus `/opt/data/host-shared-projekte/miniplan-ausfüller` (überschreibbar über `MINIPLAN_REFERENCE`):
+
+- `St. Georg - Miniplan vom 01.07.2026 - 03.10.2026.ods`
+- `Test_Person_data.ods`
+
+Die Dateien werden nicht ins Repository kopiert. Playwright öffnet die gebaute App, lädt die ODS-Ausgabe herunter und prüft Rollen, Ausschlüsse, Jahrgangsgrenzen, Doppelbelegung, Wochendienst-Markierungen, unveränderte übrige Zellen und ZIP-Einträge sowie Layout/Stilattribute. `AGENT_BROWSER_EXECUTABLE_PATH` kann ein installiertes Chromium auswählen.
+
+Kernlogik liegt unter `src/core/`; Tests unter `tests/`. Die Laufzeit benötigt nur `@e965/xlsx` und `jszip`.
+
+[MIT-Lizenz](LICENSE)

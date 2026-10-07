@@ -1,50 +1,14 @@
 <!doctype html>
 <html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Miniplan · St. Georg</title>
-  <style>/* INLINE_CSS */</style>
-</head>
-<body>
-  <main class="shell">
-    <header class="hero">
-      <p class="eyebrow">Für deine Gemeinde</p>
-      <h1>Miniplan erstellen</h1>
-      <p>Plan hochladen, kurz prüfen, als Tabelle herunterladen. Deine Dateien verlassen dieses Gerät nicht.</p>
-    </header>
-
-    <section class="card" aria-labelledby="import-title">
-      <div class="section-heading"><span class="step">1</span><div><h2 id="import-title">Gottesdienstplan einlesen</h2><p>PDF, Excel, OpenDocument oder CSV aus dem Pfarrbüro auswählen.</p></div></div>
-      <label class="dropzone" for="file-input"><input id="file-input" type="file" accept=".pdf,.xlsx,.ods,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet,text/csv" multiple><strong>Dateien auswählen</strong><span>oder hierher ziehen · PDF, XLSX, ODS und CSV</span></label>
-      <ul id="selected-files" class="selected-files" aria-live="polite"><li class="file-placeholder">Noch keine Datei ausgewählt.</li></ul>
-      <div class="options"><label>Gemeinde <input id="parish" value="St. Georg" autocomplete="organization"></label><button id="load-demo" class="ghost" type="button">Beispieldaten laden</button></div>
-      <details class="advanced-options"><summary>Erweiterte Einstellungen</summary><p>Passe die Dienste mit eigenen Planungsregeln an. Eigene Ferien- und Feiertagskalender ersetzen die voreingestellten Kalender für Baden-Württemberg.</p><div class="options"><label>Eigene Planungsregeln laden <input id="rules-input" type="file" accept=".json,application/json"></label><label>Eigene Ferien- und Feiertagskalender laden <input id="calendar-input" type="file" accept=".ics,text/calendar" multiple></label><label class="check"><input id="no-calendar" type="checkbox"> Ferien- und Feiertagsprüfung deaktivieren</label></div></details>
-    </section>
-
-    <section class="card" aria-labelledby="review-title">
-      <div class="section-heading"><span class="step">2</span><div><h2 id="review-title">Gottesdienste prüfen</h2><p>Prüfe und korrigiere die Gottesdienste deiner Gemeinde direkt in der Tabelle.</p></div><button id="add-service" class="ghost compact" type="button">+ Gottesdienst hinzufügen</button></div>
-      <label class="check service-filter"><input id="show-other-services" type="checkbox"> Gottesdienste anderer Gemeinden und Orte anzeigen</label>
-      <div class="table-wrap"><div class="table-scroll"><table><thead><tr><th>Datum</th><th>Beginn</th><th>Ende</th><th>Gottesdienst</th><th>Ort</th><th>Info</th><th></th></tr></thead><tbody id="services"><tr class="empty"><td colspan="7">Noch keine Gottesdienste geladen.</td></tr></tbody></table></div>
-      <button id="services-toggle" class="services-toggle" type="button" aria-expanded="false" aria-controls="services" hidden></button></div>
-      <details id="diagnostics-disclosure" class="diagnostics" hidden>
-        <summary id="diagnostics-summary">Importhinweise anzeigen / ausblenden</summary>
-        <div id="diagnostics"></div>
-      </details>
-    </section>
-
-    <section class="card action-card" aria-labelledby="export-title">
-      <div class="section-heading"><span class="step">3</span><div><h2 id="export-title">Miniplan erzeugen</h2><p id="calendar-help" aria-live="polite">Ferien und Feiertage in Baden-Württemberg werden berücksichtigt.</p></div></div>
-      <div class="actions">
-        <button id="create-plan" class="primary" type="button">Miniplan vorbereiten</button>
-        <label class="format-field"><span>Ausgabeformat</span><select id="export-format" aria-label="Exportformat"><option value="ods" selected>OpenDocument (.ods)</option><option value="xlsx">Excel (.xlsx)</option><option value="csv">CSV (.csv)</option></select></label>
-        <button id="download" class="primary" type="button" disabled>Datei herunterladen</button>
-      </div>
-      <div id="plan-preview" class="preview" hidden></div>
-    </section>
-    <p id="message" class="message" role="status" aria-live="polite"></p>
-  </main>
-  <footer>Ohne Konto und auch ohne Internet nutzbar.</footer>
-  <script>/* INLINE_JS */</script>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Miniplan · St. Georg</title><style>/* INLINE_CSS */</style></head>
+<body><main class="shell">
+<header class="hero"><p class="eyebrow">Für deine Gemeinde</p><h1>Ministranten einteilen</h1><p>Zwei ODS-Dateien auswählen, automatisch einteilen und die ausgefüllte Vorlage herunterladen. Deine Dateien bleiben auf diesem Gerät.</p></header>
+<section class="card" aria-labelledby="input-title"><div class="section-heading"><span class="step">1</span><div><h2 id="input-title">Vorlage und Personendaten</h2><p>Jeweils das erste Tabellenblatt wird gelesen.</p></div></div>
+<label class="dropzone" for="template-input"><input id="template-input" type="file" accept=".ods,application/vnd.oasis.opendocument.spreadsheet"><strong>Leere Miniplan-Vorlage</strong><span id="template-name">ODS-Datei auswählen</span></label>
+<label class="dropzone" for="people-input"><input id="people-input" type="file" accept=".ods,application/vnd.oasis.opendocument.spreadsheet"><strong>Personendaten</strong><span id="people-name">ODS-Datei auswählen</span></label>
+<p>Harte Regeln: zwei verschiedene Personen je Rolle, eine bei kl. Kreuz / kleines Kreuz und Lautspr. / Lautsprecher. Keine Doppelbelegung. NO_SERVICE schließt vollständig aus. <strong>Wochendienst=1 schließt bei Sonntagsgottesdiensten aus.</strong> Tauffeier und Trauung erhalten „Wochendienst“; reine Wochendienst-Zeilen bleiben unberührt.</p>
+<p>SchGD: nur der aktuelle Jahrgang (August des Beitrittsjahres bis einschließlich August des Folgejahres). Rauchfass: eine geschulte Person und eine andere mit mindestens drei vollen Mitgliedsjahren. Weiche Ziele in Reihenfolge: jüngere Jahrgänge häufiger, zeitliche Abstände, gemeinsame Haushalte, PAIR-/PREF-Wünsche. Harte Regeln haben immer Vorrang.</p>
+<details class="advanced-options" open><summary>Erweiterte Einstellungen: Mindestdauer für schwere Rollen</summary><p>Volle Mitgliedsjahre ab 1. August. Rollen und Mindestjahre können angepasst werden, eine Rolle pro Zeile als „Rolle = Jahre“.</p><label for="minimum-years">Rollen und Mindestjahre</label><textarea id="minimum-years" rows="7" spellcheck="false"></textarea></details>
+</section>
+<section class="card action-card" aria-labelledby="result-title"><div class="section-heading"><span class="step">2</span><div><h2 id="result-title">Plan einteilen</h2><p>Die Ausgabe behält Tabellenlayout und Stile der Vorlage.</p></div></div><div class="actions"><button id="create-plan" class="primary" type="button" disabled>Plan einteilen</button><button id="download" class="primary" type="button" disabled>ODS herunterladen</button></div><div id="plan-preview" class="preview" hidden></div></section>
+<p id="message" class="message" role="status" aria-live="polite"></p></main><footer>Ohne Konto. Verarbeitung vollständig lokal im Browser.</footer><script>/* INLINE_JS */</script></body></html>

@@ -8,13 +8,11 @@
     "lint": "eslint src tests scripts/*.mjs build.mjs",
     "build": "node build.mjs",
     "check": "npm run lint && npm run test",
-    "test:browser": "npm run build && node scripts/browser-parity.mjs"
+    "test:browser": "npm run build && node scripts/browser-assignment.mjs"
   },
   "dependencies": {
     "@e965/xlsx": "^0.20.3",
-    "exceljs": "4.4.0",
-    "jszip": "^3.10.1",
-    "pdfjs-dist": "^4.10.38"
+    "jszip": "^3.10.1"
   },
   "devDependencies": {
     "@eslint/js": "9.37.0",
