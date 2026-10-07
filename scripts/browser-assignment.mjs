@@ -33,7 +33,7 @@ try{
  for(const s of services){const used=new Set();for(const r of s.roles){const names=rows[r.row].slice(5,7).filter(Boolean);
   if(['Trauung','Tauffeier'].includes(s.type)){assert.deepEqual(names,['Wochendienst']);continue;}
   if(!names.length){assert.match(report,new RegExp(`Zeile ${r.row+1}:`));continue;}
-  assert.equal(names.length,roleSize(r.name));const selected=names.map(name=>{const p=people.find(p=>p.name===name);assert.ok(p);assert.notEqual(p.preference,'NO_SERVICE');assert.ok(!used.has(p.id));used.add(p.id);assert.ok(!(new Date(s.date).getUTCDay()===0&&p.weekly));assert.ok(membershipYears(p.year,s.date)>=(defaultMinimumYears[r.name]??0));if(s.type==='SchGD')assert.ok(currentCohort(p.year,s.date));return p;});
+  assert.equal(names.length,roleSize(r.name));const selected=names.map(name=>{const p=people.find(p=>p.name===name);assert.ok(p);assert.notEqual(p.preference,'NO_SERVICE');assert.ok(!used.has(p.id));used.add(p.id);assert.ok(membershipYears(p.year,s.date)>=(defaultMinimumYears[r.name]??0));if(s.type==='SchGD')assert.ok(currentCohort(p.year,s.date));return p;});
   if(/^\(?Rf\.\)?$/.test(r.name)){assert.ok(selected.some(p=>p.incense));assert.ok(selected.some(p=>membershipYears(p.year,s.date)>=3));}
   filled+=names.length;
  }}

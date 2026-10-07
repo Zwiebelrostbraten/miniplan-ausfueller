@@ -15,7 +15,7 @@ IDs müssen eindeutig sein. Wochendienst und Rauchfass sind 0/1. Wünsche: `NONE
 ## Regeln
 
 - Zwei verschiedene Personen pro Rolle; kleines Kreuz und Lautsprecher benötigen eine. Niemand dient zweimal im selben Gottesdienst.
-- NO_SERVICE schließt vollständig aus. Wochendienst=1 schließt bei Sonntagsgottesdiensten aus.
+- Nur NO_SERVICE schließt eine Person pauschal aus. Wochendienst=1 bedeutet, dass eine Person grundsätzlich Wochendienst hat; sie bleibt für gewöhnliche Sonntagsgottesdienste einteilbar. Die beiden Eingabedateien enthalten keinen datierten Wochendienstplan; Überschneidungen mit konkreten Wochendiensten können daher nicht berücksichtigt werden.
 - SchGD lässt nur aktuelle Jahrgänge zu: 1. August des Beitrittsjahres bis 31. August des Folgejahres. Im August überlappen zwei Jahrgänge. Ohne zulässige Personen bleibt die Rolle leer und erscheint im Konfliktbericht.
 - Rauchfass benötigt zwei Personen: mindestens eine geschulte Person und eine **andere** Person mit mindestens drei vollen Mitgliedsjahren.
 - Fahnen, gr. Fahnen, Laternen, gr. Kreuz und Palmstecken benötigen fünf volle Jahre; kl. Kreuz / kleines Kreuz vier. Mitgliedsjahre beginnen am 1. August. Die sichtbaren erweiterten Einstellungen erlauben eigene Rollen und Mindestjahre.

@@ -13,7 +13,7 @@ export function assignServices(services, people, minimumYears = defaultMinimumYe
  for(const s of [...services].sort((a,b)=>a.date.localeCompare(b.date)||String(a.time??'').localeCompare(String(b.time??'')))) {
   if(s.type==='Wochendienst') continue;
   if(['Tauffeier','Trauung'].includes(s.type)) { for(const r of s.roles) assignments.push({date:s.date,row:r.row,role:r.name,people:[],marker:'Wochendienst'}); continue; }
-  const eligible=persons.filter(p=>p.preference!=='NO_SERVICE' && !(new Date(`${s.date}T00:00:00Z`).getUTCDay()===0 && p.weekly) && (s.type!=='SchGD'||currentCohort(p.year,s.date)));
+  const eligible=persons.filter(p=>p.preference!=='NO_SERVICE' && (s.type!=='SchGD'||currentCohort(p.year,s.date)));
   const groups=s.roles.map((r,index)=>{
    const size=roleSize(r.name), incense=/^\(?Rf\.\)?$/i.test(r.name);
    const candidates=eligible.filter(p=>membershipYears(p.year,s.date)>=(minimumYears[r.name]??0));

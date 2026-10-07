@@ -8,9 +8,9 @@ describe('Einteilung', () => {
   const r = assignServices([service(['kl. Kreuz', 'Lautspr.', 'Altar'])], Array.from({length:4},(_,i)=>person(`${i}`)));
   expect(r.filled).toBe(4); expect(new Set(r.assignments.flatMap(a=>a.people)).size).toBe(4); expect(r.conflicts).toEqual([]);
  });
- it('excludes NO_SERVICE and Sunday weekly people, reporting exact unfilled role', () => {
-  const r = assignServices([service(['Altar'])], [person('a',2020,{preference:'NO_SERVICE'}),person('b',2020,{weekly:true})]);
-  expect(r.filled).toBe(0); expect(r.unfilled).toBe(2); expect(r.conflicts[0]).toMatchObject({date:'2026-09-06',role:'Altar'}); expect(r.conflicts[0].reason).toMatch(/Kandidaten/);
+ it('excludes NO_SERVICE but allows people who generally do Wochendienst without a dated duty roster', () => {
+  const r = assignServices([service(['Altar'])], [person('a',2020,{preference:'NO_SERVICE'}),person('b',2020,{weekly:true}),person('c',2020)]);
+  expect(r.filled).toBe(2); expect(r.assignments[0].people).toEqual(expect.arrayContaining(['b','c'])); expect(r.conflicts).toEqual([]);
  });
  it('defines August boundaries including overlapping cohorts', () => {
   expect(currentCohort(2025,'2026-07-31')).toBe(true); expect(currentCohort(2026,'2026-07-31')).toBe(false);
